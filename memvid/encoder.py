@@ -213,7 +213,7 @@ class MemvidEncoder:
             qr_image.save(frame_path)
 
         created_frames = list(frames_dir.glob("frame_*.png"))
-        print(f"🐛 FRAMES: {len(created_frames)} files in {frames_dir}")
+        print(f"FRAMES: {len(created_frames)} files in {frames_dir}")
 
         logger.info(f"Generated {len(self.chunks)} QR frames in {frames_dir}")
         return frames_dir
@@ -268,8 +268,8 @@ class MemvidEncoder:
         thread_count = min(os.cpu_count() or 4, 16)
         cmd.extend(['-threads', str(thread_count)])
 
-        print(f"🎬 FFMPEG ENCODING SUMMARY:")
-        print(f"   🎥 Codec Config:")
+        print(f"FFMPEG ENCODING SUMMARY:")
+        print(f"   Codec Config:")
         print(f"      • codec: {codec}")
         print(f"      • file_type: {codec_config.get('video_file_type', 'unknown')}")
         print(f"      • fps: {codec_config.get('fps', 'default')}")
@@ -383,7 +383,7 @@ class MemvidEncoder:
         # Use full codec mapping
         from .config import codec_parameters
 
-        print(f"🐛 FFMPEG: frames={frames_dir} → docker_mount={frames_dir.parent}")
+        print(f"FFMPEG: frames={frames_dir} -> docker_mount={frames_dir.parent}")
 
         cmd = self._build_ffmpeg_command(frames_dir, output_file, codec)
 
