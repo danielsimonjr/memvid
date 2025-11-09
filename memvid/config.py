@@ -17,7 +17,7 @@ DEFAULT_CHUNK_SIZE = 1024
 DEFAULT_OVERLAP = 32
 
 # Codec Settings
-VIDEO_CODEC = 'h265'        # Valid options are: mpv4, h265 or hevc, h264 or avc, and av1
+VIDEO_CODEC = 'mp4v'        # Valid options are: mpv4, h265 or hevc, h264 or avc, and av1
 MP4V_PARAMETERS= {"video_file_type": "mp4",
                   "video_fps": 15,
                   "frame_height": 256,
