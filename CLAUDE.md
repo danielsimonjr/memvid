@@ -27,7 +27,8 @@ Memvid is a Python library for QR code video-based AI memory that enables:
 ```bash
 # Create and activate virtual environment
 python -m venv .memvid
-source .memvid/bin/activate  # On macOS/Linux
+source .memvid/bin/activate       # macOS/Linux
+.memvid\Scripts\activate          # Windows
 
 # Install dependencies
 pip install -r requirements.txt
