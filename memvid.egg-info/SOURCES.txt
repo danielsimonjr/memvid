@@ -14,6 +14,7 @@ examples/soccer_chat.py
 memvid/__init__.py
 memvid/chat.py
 memvid/config.py
+memvid/config_fast.py
 memvid/docker_manager.py
 memvid/encoder.py
 memvid/index.py

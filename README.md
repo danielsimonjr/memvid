@@ -212,10 +212,54 @@ python book_chat.py
 ```python
 from sentence_transformers import SentenceTransformer
 
-# Use custom embedding model
-custom_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+# Use custom embedding model.
+# SECURITY: pass trust_remote_code=False and pin a `revision` (commit SHA)
+# whenever you load a third-party HuggingFace model. See
+# "Model Loading Security" below for details.
+custom_model = SentenceTransformer(
+    'sentence-transformers/all-mpnet-base-v2',
+    revision='84f2bcc00d77236f9e89c8a360a00fb1139bf47d',  # pin to a known SHA
+    trust_remote_code=False,
+)
 encoder = MemvidEncoder(embedding_model=custom_model)
 ```
+
+Or simply override the defaults via environment variables — memvid will then
+load the model with the same hardened settings it uses for its built-in
+default:
+
+```bash
+export MEMVID_EMBEDDING_MODEL="sentence-transformers/all-mpnet-base-v2"
+export MEMVID_EMBEDDING_REVISION="84f2bcc00d77236f9e89c8a360a00fb1139bf47d"
+```
+
+### Model Loading Security
+
+memvid downloads its embedding model from HuggingFace Hub the first time you
+encode or query a memory. That makes the embedder a supply-chain attack
+surface: a compromised HF repo can ship malicious pickled weights or custom
+modeling code that executes arbitrary Python on `from_pretrained`. To close
+that hole, every `SentenceTransformer` load that memvid performs is hardened
+with three defenses:
+
+| Defense | What it does |
+| --- | --- |
+| `trust_remote_code=False` | Refuses to execute Python shipped inside the HF repo. |
+| Pinned `revision` (commit SHA) | First-run downloads pin to a known-good snapshot, not whatever is currently at `main`. |
+| `TRANSFORMERS_USE_SAFETENSORS=1` | Prefers `.safetensors` weights (cannot execute code on load) over pickled `.bin` files. Set automatically when `memvid.index` is imported. |
+
+The default model is `sentence-transformers/all-MiniLM-L6-v2` pinned to commit
+`c9745ed1d9f207416be6d2e6f8de32d1f16199bf` (2025-03-06). Override either via
+environment variable:
+
+| Variable | Purpose |
+| --- | --- |
+| `MEMVID_EMBEDDING_MODEL` | Fully-qualified HF repo (e.g. `sentence-transformers/all-mpnet-base-v2`). |
+| `MEMVID_EMBEDDING_REVISION` | 40-character commit SHA to pin. |
+
+When you supply a custom model via the Python API, you are responsible for
+passing the security kwargs yourself (see the snippet above) — memvid only
+controls the load it performs internally.
 
 ### Video Optimization
 ```python

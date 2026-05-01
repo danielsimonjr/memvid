@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="memvid",
-    version="0.1.4",
+    version="0.2.0",
     author="Saleban Olow",
     author_email="olow30@gmail.com",
     description="Video-based AI memory library for fast semantic search and retrieval",
@@ -31,7 +31,7 @@ setup(
         "qrcode[pil]>=7.3",
         "opencv-python>=4.5.0",
         "opencv-contrib-python>=4.5.0",  # Includes QR decoder
-        "sentence-transformers>=2.2.0",
+        "sentence-transformers>=2.7.0",  # SECURITY: needs trust_remote_code+revision kwargs (added in 2.3.0)
         "numpy>=1.21.0",
         "tqdm>=4.50.0",
         "faiss-cpu>=1.7.0",

@@ -2,7 +2,16 @@
 Index management for embeddings and vector search
 """
 
+import os
+
+# SECURITY: Prefer safetensors weight format over pickled .bin files when
+# transformers downloads model files. safetensors cannot execute code on load.
+# Must be set before `transformers` / `sentence_transformers` imports below
+# read it, hence module-top placement.
+os.environ.setdefault("TRANSFORMERS_USE_SAFETENSORS", "1")
+
 import json
+import inspect
 import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
@@ -12,9 +21,50 @@ from pathlib import Path
 import pickle
 from tqdm import tqdm
 
-from .config import get_default_config
+from .config import get_default_config, EMBEDDING_REVISION
 
 logger = logging.getLogger(__name__)
+
+
+# Probe the real SentenceTransformer signature once at import time so test
+# mocks (which patch the module-level name) don't break the introspection.
+try:
+    _ST_INIT_PARAMS = set(inspect.signature(SentenceTransformer.__init__).parameters)
+except (TypeError, ValueError):  # pragma: no cover - defensive
+    _ST_INIT_PARAMS = {"trust_remote_code", "revision"}
+
+if "trust_remote_code" not in _ST_INIT_PARAMS:
+    logger.warning(
+        "sentence-transformers is too old to accept trust_remote_code; "
+        "upgrade to >=2.3.0 to enable supply-chain RCE protection."
+    )
+if "revision" not in _ST_INIT_PARAMS:
+    logger.warning(
+        "sentence-transformers is too old to accept revision pinning; "
+        "upgrade to >=2.3.0 to pin model versions."
+    )
+
+
+def _load_sentence_transformer(model_name: str, revision: Optional[str]) -> SentenceTransformer:
+    """
+    Load a SentenceTransformer with hardened defaults.
+
+    SECURITY: Always passes `trust_remote_code=False` so the loader refuses
+    to execute custom modeling code shipped inside a HuggingFace repo.
+    Always passes a `revision` (commit SHA) when supplied, so first-run
+    downloads pin to a known-good snapshot rather than whatever currently
+    sits at `main` on the Hub.
+
+    Older sentence-transformers versions (<2.3.0) lack these kwargs; the
+    module-level probe above logs a warning, and we silently drop them so
+    the library still imports.
+    """
+    kwargs: Dict[str, Any] = {}
+    if "trust_remote_code" in _ST_INIT_PARAMS:
+        kwargs["trust_remote_code"] = False
+    if revision and "revision" in _ST_INIT_PARAMS:
+        kwargs["revision"] = revision
+    return SentenceTransformer(model_name, **kwargs)
 
 
 class IndexManager:
@@ -28,7 +78,13 @@ class IndexManager:
             config: Optional configuration dictionary
         """
         self.config = config or get_default_config()
-        self.embedding_model = SentenceTransformer(self.config["embedding"]["model"])
+        # Caller-supplied config["embedding"]["revision"] wins; otherwise fall
+        # back to the pinned default. Passing None would skip the pin entirely,
+        # which we do not want on the default code path.
+        revision = self.config["embedding"].get("revision", EMBEDDING_REVISION)
+        self.embedding_model = _load_sentence_transformer(
+            self.config["embedding"]["model"], revision
+        )
         self.dimension = self.config["embedding"]["dimension"]
         
         # Initialize FAISS index

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Hardened HuggingFace embedder loading** to close a supply-chain RCE vector
+  in which a compromised HF repository could deliver malicious pickled weights
+  or custom modeling code on first-run download:
+  - `IndexManager` now passes `trust_remote_code=False` to every
+    `SentenceTransformer` load, refusing to execute Python shipped inside
+    the model repo.
+  - The default embedding model is fully qualified
+    (`sentence-transformers/all-MiniLM-L6-v2`) and pinned to revision
+    `c9745ed1d9f207416be6d2e6f8de32d1f16199bf` so first-run downloads
+    snapshot a known-good commit instead of `main`.
+  - `TRANSFORMERS_USE_SAFETENSORS=1` is set when `memvid.index` is imported,
+    biasing weight downloads toward `.safetensors` files (cannot execute
+    code on load) over pickled `.bin` files.
+  - New environment variables `MEMVID_EMBEDDING_MODEL` and
+    `MEMVID_EMBEDDING_REVISION` allow operators to swap or re-pin the model
+    without code changes; explicit `config['embedding']` overrides still
+    win.
+  - Bumped `sentence-transformers` floor in `setup.py` from `>=2.2.0` to
+    `>=2.7.0` (the `trust_remote_code` and `revision` kwargs landed in
+    2.3.0).
+  - New `tests/test_security.py` exercises every defense via mocks (no
+    network).
+
 ### Added
 - **MP4V Codec Optimization**: Set MP4V as the default codec for 1.84x faster encoding compared to H.265/HEVC
   - Uses OpenCV's native MP4V codec (no FFmpeg subprocess required)

@@ -2,6 +2,7 @@
 Configuration defaults and constants for Memvid
 """
 
+import os
 from typing import Dict, Any
 
 # QR Code settings
@@ -80,7 +81,21 @@ MAX_WORKERS = 4  # For parallel processing
 CACHE_SIZE = 1000  # Number of frames to cache
 
 # Embedding settings
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # Fast and good quality
+#
+# SECURITY: The default embedding model is pinned to a specific HuggingFace
+# revision (commit SHA) to mitigate supply-chain attacks. A first-run download
+# of an unpinned model would otherwise pull whatever the maintainer (or an
+# attacker who has compromised the repo) has currently published as `main`.
+# Some HF checkpoints deserialize pickled weights, which is arbitrary code
+# execution. Combined with `trust_remote_code=False` and the
+# `TRANSFORMERS_USE_SAFETENSORS=1` environment variable (set in
+# memvid/index.py), this gives us a defense-in-depth posture.
+#
+# Override at runtime via env vars:
+#   MEMVID_EMBEDDING_MODEL=<org/name>
+#   MEMVID_EMBEDDING_REVISION=<40-char commit SHA>
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"  # Fast and good quality
+EMBEDDING_REVISION = "c9745ed1d9f207416be6d2e6f8de32d1f16199bf"  # 2025-03-06
 EMBEDDING_DIMENSION = 384
 
 # Index settings
@@ -130,7 +145,11 @@ def get_default_config() -> Dict[str, Any]:
             "cache_size": CACHE_SIZE,
         },
         "embedding": {
-            "model": EMBEDDING_MODEL,
+            # Env-var overrides allow ops to swap the model / pin a different
+            # revision without code changes. Explicit caller-supplied configs
+            # still win because get_default_config() is only used as a fallback.
+            "model": os.environ.get("MEMVID_EMBEDDING_MODEL", EMBEDDING_MODEL),
+            "revision": os.environ.get("MEMVID_EMBEDDING_REVISION", EMBEDDING_REVISION),
             "dimension": EMBEDDING_DIMENSION,
         },
         "index": {
