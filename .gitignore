@@ -25,3 +25,7 @@ memvid.egg-info/
 memvid.egg-info/*
 dist/memvid-*/
 
+
+# Runtime SQLite db
+remember_mcp.db
+*.db-journal
