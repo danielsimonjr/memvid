@@ -9,7 +9,7 @@ Pillow==11.2.1
 
 # Optional dependencies for PDF support
 pypdf>=4.0.0
-python-dotenv==1.1.0
+python-dotenv==1.2.2
 
 # Optional imports for epub
 beautifulsoup4
