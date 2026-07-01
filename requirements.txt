@@ -8,7 +8,7 @@ faiss-cpu==1.7.4
 Pillow==11.2.1
 
 # Optional dependencies for PDF support
-PyPDF2==3.0.1
+pypdf>=4.0.0
 python-dotenv==1.1.0
 
 # Optional imports for epub
