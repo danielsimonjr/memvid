@@ -69,16 +69,16 @@ class MemvidEncoder:
             overlap: Overlap between chunks
         """
         try:
-            import PyPDF2
+            import pypdf
         except ImportError:
-            raise ImportError("PyPDF2 is required for PDF support. Install with: pip install PyPDF2")
+            raise ImportError("pypdf is required for PDF support. Install with: pip install pypdf")
 
         if not Path(pdf_path).exists():
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
         text = ""
         with open(pdf_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
+            pdf_reader = pypdf.PdfReader(file)
             num_pages = len(pdf_reader.pages)
 
             logger.info(f"Extracting text from {num_pages} pages of {Path(pdf_path).name}")

@@ -37,7 +37,7 @@ setup(
         "faiss-cpu>=1.7.0",
         "Pillow>=9.0.0",
         "python-dotenv>=0.19.0",
-        "PyPDF2>=3.0.0",
+        "pypdf>=4.0.0",
     ],
     extras_require={
         "dev": [
